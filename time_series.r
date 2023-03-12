@@ -17,3 +17,5 @@ library(xts)         # Para utilizar objetos xts
 library(tidyverse)   # Conjunto de paquetes (incluye dplyr y ggplot2)
 library(readxl)      # Para leer archivos excel 
 library(car)         # Para usar la función qqPlot
+
+#Lo primero que hacemos es correr determinados modelos sencillos para entender su comportamiento
