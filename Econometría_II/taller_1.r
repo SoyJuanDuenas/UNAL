@@ -25,14 +25,18 @@ ipr =  as.data.frame(read_excel("srea_027.xls", range= cell_rows(9:567)))
 
 colnames(ipr) <- c("Año", "Mes", "Total_industria", "Total_sin_trilla")
 
-
-
 for (i in 1:558){                       #se puede cambiar el 558 por la longitud del ds para mayor recursividad
-  if (is.na((ipr[i,"Año"])) == TRUE){
+  if (is.na((ipr[i,"Año"])) == FALSE){
     valor = ipr[i,"Año"]
   }else{
     ipr[i,"Año"] = valor
   }
 }
 
-## HAY PROBLEMAS EN VALOR, NO LO RECONOCE
+ipr = na.omit(ipr)
+
+
+
+
+
+
