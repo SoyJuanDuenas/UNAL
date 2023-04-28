@@ -130,8 +130,8 @@ ipr_arima_1 = arima(ipr_ts, order = c(1,1,2))
 ipr_arima_2 = arima(ipr_ts, order = c(2,1,1))
 
 AIC(ipr_arima_2)
-BIC(ipr_arima_2)
 AIC(ipr_arima_1)
+BIC(ipr_arima_2)
 BIC(ipr_arima_1)
 
 #elegimos el segundo modelo dado que es el que tiene un menor AIC y BIC
@@ -144,11 +144,41 @@ plot(arima_211_facp, main="Función de Autocorrelación Parcial (FACP)", xlab="R
 
 #Verificamos supuestos
 
-checkresiduals(ipr_arima_2)
+# Realizar prueba de Jarque-Bera
+jb_test <- jarque.bera.test(ipr_arima_2$residuals)
+
+# Imprimir resultados de la prueba
+print(jb_test)
+
+# Interpretar resultados de la prueba
+if (jb_test$p.value < 0.05) {
+  print("La serie no tiene una distribución normal")
+} else {
+  print("La serie tiene una distribución normal")
+}
+
+# Realizar prueba de Ljung-Box
+lb_test <- Box.test(ipr_arima_2$residuals, type = "Ljung-Box")
+
+# Imprimir resultados de la prueba
+print(lb_test)
+
+# Interpretar resultados de la prueba
+if (lb_test$p.value < 0.05) {
+  print("La serie esta correlacionada serialmente")
+} else {
+  print("La serie no esta correlacionada serialmente")
+}
+
+# Realizamos la prueba ARCH
+arch_test = arch.test(ipr_arima_2)
+print(arch_test)
 
 #hacemos predicción
 
 forecast_arima_211 <- forecast(ipr_arima_2, lead = 10)
+
+
 
 
 
