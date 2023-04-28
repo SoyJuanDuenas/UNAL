@@ -9,6 +9,21 @@
 remove(list = ls())
 
 #Iniciamos importando librerias
+#install.packages("forecast")    # Para hacer pronósticos con modelos arima
+#install.packages("lmtest")      # Significancia individual de los coeficientes ARIMA
+#install.packages("urca")        # Prueba de raíz unitaria
+#install.packages("tseries")     # Para estimar modelos de series de tiempo y hacer pruebas de supuestos.
+#install.packages("readxl")      # Para leer archivos de excel
+#install.packages("stargazer")   # Para presentar resultados más estéticos.
+#install.packages("psych")       # Para hacer estadísticas descriptivas
+#install.packages("seasonal")    # Para desestacionalizar series
+#install.packages("aTSA")        # Para hacer la prueba de efectos ARCH
+#install.packages("astsa")       # Para estimar, validar y hacer pronósticos para modelos ARIMA/SARIMA  
+#install.packages("xts")         # Para utilizar objetos xts 
+#install.packages("tidyverse")   # Conjunto de paquetes (incluye dplyr y ggplot2)
+#install.packages("readxl")      # Para leer archivos excel 
+#install.packages("car")         # Para usar la función qqPlot
+
 
 library(forecast)    # Para hacer pronósticos con modelos arima
 library(lmtest)      # Significancia individual de los coeficientes ARIMA
@@ -28,14 +43,12 @@ library(car)         # Para usar la función qqPlot
 # Para la realización del trabajo se uilizará el Índice de producción real de la 
 # industria manufacturera colombiana
 
-setwd("C:/Users/PC/Documents/Repos/UNAL/Econometría_II")
-ipr =  read_excel("srea_027.xls", range= cell_rows(9:480))
+
+ipr =  read_csv("https://raw.githubusercontent.com/SoyJuanDuenas/UNAL/master/Econometr%C3%ADa_II/srea_027.csv")
+ipr <- slice(ipr, 9:n())
 colnames(ipr) <- c("Año", "Mes", "Total_industria", "Total_sin_trilla")
 
-
 #Iniciamos el Data-cleaning y generamos el archivo ts
-
-ipr = select(ipr, -"Total_sin_trilla")
 
 for (i in 1:558){                   
   if (is.na((ipr[i,"Año"])) == FALSE){
@@ -45,19 +58,21 @@ for (i in 1:558){
   }
 }
 
-ipr = na.omit(ipr)
-
-ipr_ts = ts(ipr$Total_industria, start = 1980, frequency = 12)
+ipr = select(ipr, Año, Mes, Total_industria)
+ipr <- na.omit(ipr)
+ipr$Total_industria = as.numeric(ipr$Total_industria)
 
 #Identificación
 
-plot(ipr_ts)
-ipr_fac = acf(ipr_ts, plot = F)
-ipr_facp = pacf(ipr_ts, plot = F)
+ipr_fac = acf(ipr$Total_industria, plot = F)
+ipr_facp = pacf(ipr$Total_industria, plot = F)
 
 plot(ipr_fac, main="Función de Autocorrelación (FAC) de la IPR", xlab="Retraso", ylab="Autocorrelación")
 plot(ipr_facp, main="Función de Autocorrelación Parcial (FACP) de la IPR", xlab="Retraso", ylab="Autocorrelación Parcial")
 
+
+ipr_ts = ts(ipr$Total_industria, start = 1980, frequency = 12)
+plot(ipr_ts)
 
 #Nos damos cuenta que tenemos problemas de estacionareidad via grafica, por ende aplicamos transformaciones
 #Especialmente, transformaciones logaritmica y luego diferencia para estabilizar media y varianza
@@ -70,8 +85,6 @@ ipr_facp_diff = pacf(ipr_diff, plot = F)
 plot(ipr_fac_diff, main="Función de Autocorrelación (FAC) Log_Diff_IPR", xlab="Retraso", ylab="Autocorrelación")
 plot(ipr_facp_diff, main="Función de Autocorrelación Parcial (FACP)_Log_Diff_IPR", xlab="Retraso", ylab="Autocorrelación Parcial")
 
-adf.test(ipr_diff)
-kpss.test(ipr_diff)
 
 #Al no funcionar estas transformaciones realizaremos un promedio trimestral 
 ipr_trimestral = aggregate(ipr_ts, nfrequency = 4, FUN = mean)
@@ -96,11 +109,20 @@ ipr_tri_diff = diff(ipr_trimestral)
 ipr_fac_tri_diff = acf(ipr_tri_diff, plot = F)
 ipr_facp_tri_diff = pacf(ipr_tri_diff, plot = F)
 
+plot(ipr_tri_diff)
 plot(ipr_fac_tri_diff, main="Función de Autocorrelación (FAC) IPR (Trimestral)", xlab="Retraso", ylab="Autocorrelación")
 plot(ipr_facp_tri_diff, main="Función de Autocorrelación Parcial (FACP) IPR (Trimestral)", xlab="Retraso", ylab="Autocorrelación Parcial")
 
 adf.test(ipr_tri_diff)
 kpss.test(ipr_tri_diff)
+
+#Nos damos cuenta que hay problemas de varianza en 2020 y 2021 como consecuencia de los impactos en el
+#indice que tuvo la pandemia
+
+ipr_ts = ts(ipr$Total_industria, start = 1980, end=2019, frequency = 12)
+ipr_trimestral = aggregate(ipr_ts, nfrequency = 4, FUN = mean)
+ipr_tri_diff = diff(ipr_trimestral)
+plot(ipr_tri_diff)
 
 #Empezamos a identificar el modelo teniendo en cuenta que hicimos un diferencial, es decir que será de la forma ARIMA(p,1,q)
 
