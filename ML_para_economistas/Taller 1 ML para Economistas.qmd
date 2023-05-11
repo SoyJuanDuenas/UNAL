@@ -1,0 +1,156 @@
+---
+title: "Taller 1 ML para Economistas"
+author: "Juan David Dueñas Garavito"
+format: html
+editor: visual
+---
+
+## Importamos las librerias
+
+```{r}
+library(ggplot2)
+library(reshape2)
+```
+
+## Importamos el CSV
+
+```{r}
+data <- read_csv("https://raw.githubusercontent.com/SoyJuanDuenas/UNAL/master/ML_para_economistas/AirIndia%20(International).csv", show_col_types = FALSE)
+head(data)
+```
+
+Modificamos el nombre de las columnas
+
+```{r}
+# Cambiar los nombres de las columnas
+colnames(data) <- c("month", "departures", "hours", "km", "passenger_carried", "passenger_kms_performed",
+                    "available_seat", "pax_load_factor", "fy")
+
+```
+
+## Caracterización
+
+En este dataframe tenemos datos de una aerolinea (AirIndia) durante los diferentes meses, contiene datos cuantitativos y puede ser usada para estimar el performance y la eficiencia de la aerolinea durante los diferentes cortes de tiempo
+
+Las variables son las siguientes:
+
+month: Esta columna se refiere al mes en el que se registraron los datos.
+
+departures: El número de vuelos que salieron durante el mes en cuestión.
+
+hours: Horas voladas por la aerolínea durante el mes en cuestión. Esto se puede utilizar para hacer un seguimiento de la utilización de la flota de la aerolínea.
+
+km: Kilómetros volados por la aerolínea durante el mes, medidos en miles. Esto se puede utilizar para hacer un seguimiento del rendimiento operativo general de la aerolínea.
+
+passenger_carried: Número de pasajeros transportados por la aerolínea durante un mes determinado.
+
+passenger_kms_performed: Kilómetros de pasajero realizados por la aerolínea durante el mes, medidos en miles. Esto se puede utilizar para hacer un seguimiento del rendimiento de ingresos de la aerolínea.
+
+available_seat: Kilómetros de asiento disponibles en los vuelos de la aerolínea durante el mes, medidos en miles. Esto se puede utilizar para hacer un seguimiento de la utilización de capacidad de la aerolínea.
+
+pax_load_factor: Porcentaje de asientos disponibles que fueron ocupados realmente por pasajeros durante el mes en cuestión. Esta es una métrica clave para las aerolíneas, ya que indica qué tan eficazmente están llenando sus aviones.
+
+## ¿Para qué un modelo de machine learning
+
+Nos seria útil correr modelos de machine learning con varios objetivos, clusterizar los diferentes meses según su comportamiento con el fin de poder planificar financieramente el flujo de caja, o por otro lado podemos usar modelos de predicción con el fin de obtener un estimado de cual es la capacidad que se debe suplir y por ende hacer una oferta adecuada para cada uno de los meses en sus tendencias
+
+## verificamos las variables
+
+```{r}
+summary(data)
+```
+
+```{r}
+# Eliminar filas con valores faltantes
+data <- na.omit(data)
+
+```
+
+Tenemos una base de datos con un buen comportamiento a la cual no es necesario hacerle ninguna clase de modificación o estimar valores nulos, casi que en su totalidad los datos son de tipo numerico lo cual facilita trabajar con metodologias cuantitativas.
+
+Sin embargo debido a la pandemia tenemos un mes con datos igual a 0, pero como es un dato relacionado con el tiempo no lo podemos eliminar.
+
+Se le realizo un cambio de nombres a las columnas debido a facilidad de trabajo, además se eliminará la última columna del dataset dado que no nos provee de información relevante para el análisis. a su vez la última fila del dataset dado que tiene datos incompletos
+
+```{r}
+# Eliminar filas con valores faltantes
+data <- na.omit(data)
+```
+
+Corremos una matriz de correlación, para esto debemos primero tener seleccionadas unicamente las variables numericas
+
+```{r}
+# Filtrar solo columnas numéricas
+data_num <- data[, sapply(data, is.numeric)]
+
+# Calcular la matriz de correlación
+correlation_matrix <- cor(data_num)
+
+# Crear el gráfico de mapa de calor
+library(ggplot2)
+library(reshape2)
+
+# Crear una función para cambiar la dirección de las etiquetas del eje x
+rotate_x_labels <- function(plot) {
+  plot + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+# Crear el mapa de calor
+heatmap_plot <- ggplot(melt(correlation_matrix), aes(Var2, Var1, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  labs(title = "Mapa de calor de correlación")
+
+# Mostrar el mapa de calor con etiquetas del eje x rotadas
+print(rotate_x_labels(heatmap_plot))
+
+
+```
+
+graficamos las diferentes variables
+
+```{r}
+ggplot(data, aes(x = seq_along(departures), y = departures)) +
+  geom_line() +
+  xlab("Índice") +
+  ylab("Departures") +
+  ggtitle("Gráfico de la columna 'departures'")
+```
+
+```{r}
+# Tramar gráfico de la columna "passenger_carried"
+library(ggplot2)
+
+ggplot(data, aes(x = seq_along(passenger_carried), y = passenger_carried)) +
+  geom_line() +
+  xlab("Índice") +
+  ylab("Passenger Carried") +
+  ggtitle("Gráfico de la columna 'passenger_carried'")
+
+```
+
+```{r}
+ggplot(data, aes(x = seq_along(passenger_carried), y = passenger_carried)) +
+  geom_line() +
+  xlab("Índice") +
+  ylab("Passenger Carried") +
+  ggtitle("Gráfico de la columna 'passenger_carried'")
+```
+
+Podemos hacer un modelo de machine learning para pronosticar cuanto habria sido la cantidad de viajes, los Km realizados entre otros en caso de que no hubieramos la pandemia, probablemente la mejor metodologia es usar metodos de pronostrico que tengan en cuenta la tendencia, dado que los datos que tenemos tienen una tendencia definida y no son estocasticos, es muy probable que el modelo de como resultado la continuación de la tendencia con determinado intervalo de confianza.
+
+## Diferencias Python y R
+
+A continuación detallaremos las principales diferencias entre python y R
+
+1.  Enfoque principal: Python es un lenguaje de programación general que se utiliza en una amplia gama de aplicaciones, desde desarrollo web hasta análisis de datos, aprendizaje automático y más. R, por otro lado, está especialmente diseñado para análisis de datos y estadísticas, y se ha convertido en un lenguaje popular entre los científicos de datos y estadísticos.
+
+2.  Sintaxis: Python y R tienen sintaxis diferentes. Python se destaca por su legibilidad y enfoque en la escritura de código limpio y fácil de entender. R, por otro lado, se centra en la manipulación de datos y la realización de operaciones estadísticas, lo que lleva a una sintaxis más orientada a las estadísticas y a veces menos intuitiva para los programadores no familiarizados con R.
+
+3.  Ecosistema de librerías: Python cuenta con un ecosistema muy amplio de librerías y frameworks, como Pandas, NumPy, Matplotlib, TensorFlow y scikit-learn, que ofrecen una amplia gama de herramientas para tareas de análisis de datos, aprendizaje automático, visualización y más. R también tiene una gran cantidad de paquetes y librerías especializados para análisis estadístico y visualización de datos, como ggplot2, dplyr y tidyr, que son muy populares en la comunidad de R.
+
+4.  Visualización de datos: R tiene un enfoque más tradicional y poderoso para la visualización de datos, con paquetes como ggplot2 que ofrecen una gran flexibilidad y control sobre los gráficos generados. Python, por otro lado, ofrece una variedad de bibliotecas de visualización, como Matplotlib, Seaborn y Plotly, que brindan opciones tanto para gráficos básicos como para visualizaciones interactivas.
+
+5.  Aprendizaje automático: Python se ha convertido en el lenguaje preferido para el aprendizaje automático y cuenta con bibliotecas populares como scikit-learn, TensorFlow y PyTorch que brindan herramientas y modelos para tareas de aprendizaje automático. R también tiene paquetes para aprendizaje automático, como caret y MLR, pero Python tiene una comunidad más grande y una gama más amplia de herramientas y recursos para el aprendizaje automático.
+
+\
